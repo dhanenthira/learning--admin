@@ -100,10 +100,11 @@ export default function Sidebar() {
 
       {/* Footer Switch to Student Portal & Logout */}
       <div style={{ padding: '16px', borderTop: '1px solid var(--divider)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <a
-          href="http://localhost:5000"
-          target="_blank"
-          rel="noreferrer"
+        <button
+          onClick={() => {
+            const savedUrl = localStorage.getItem('student_portal_url') || 'http://localhost:5000';
+            window.open(savedUrl, '_blank');
+          }}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -114,13 +115,14 @@ export default function Sidebar() {
             color: 'var(--primary-light)',
             fontSize: '12px',
             fontWeight: 600,
-            textDecoration: 'none',
-            border: '1px solid rgba(59, 130, 246, 0.25)'
+            border: '1px solid rgba(59, 130, 246, 0.25)',
+            cursor: 'pointer',
+            textAlign: 'left'
           }}
         >
           <span>Open Student Portal</span>
           <ExternalLink size={14} />
-        </a>
+        </button>
 
         <button
           onClick={logout}
@@ -146,3 +148,4 @@ export default function Sidebar() {
     </aside>
   );
 }
+
