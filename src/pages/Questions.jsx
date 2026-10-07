@@ -1,16 +1,11 @@
-import React, { useState } from 'react';
-import { PlusCircle, Search, Trash2, Edit3, Filter, HelpCircle, Check, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { PlusCircle, Search, Trash2, Edit3, Filter, HelpCircle, Check, X, AlertCircle } from 'lucide-react';
 import Header from '../components/Header';
 
 export default function Questions() {
-  const [questions, setQuestions] = useState([
-    { id: 'q1', title: 'Train Speed & Distance Calculation', category: 'Aptitude', topic: 'Time & Distance', difficulty: 'Easy', answer: '150 metres', options: ['120 metres', '150 metres', '180 metres', '200 metres'] },
-    { id: 'q2', title: 'Profit & Loss Margin Evaluation', category: 'Aptitude', topic: 'Profit & Loss', difficulty: 'Easy', answer: '$200', options: ['$150', '$180', '$200', '$250'] },
-    { id: 'q3', title: 'Binary Search Worst Case Time Complexity', category: 'Technical', topic: 'Data Structures', difficulty: 'Easy', answer: 'O(log n)', options: ['O(1)', 'O(n)', 'O(log n)', 'O(n log n)'] },
-    { id: 'q4', title: 'HTTP Authentication Status Code', category: 'Technical', topic: 'Computer Networks', difficulty: 'Easy', answer: '401 Unauthorized', options: ['400 Bad Request', '401 Unauthorized', '403 Forbidden', '404 Not Found'] },
-    { id: 'q5', title: 'Dijkstra Shortest Path with Negative Weights', category: 'Technical', topic: 'Algorithms', difficulty: 'Hard', answer: 'Fails with negative cycles', options: ['Works correctly', 'Fails with negative cycles', 'Requires Floyd-Warshall', 'O(V^3)'] },
-  ]);
-
+  const [questions, setQuestions] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [catFilter, setCatFilter] = useState('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -30,46 +25,82 @@ export default function Questions() {
     explanation: ''
   });
 
-  const handleCreate = (e) => {
+  const fetchQuestions = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get('/api/v1/questions');
+      if (Array.isArray(res.data)) {
+        setQuestions(res.data);
+      }
+    } catch (err) {
+      console.error('Error fetching questions:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchQuestions();
+  }, []);
+
+  const handleCreate = async (e) => {
     e.preventDefault();
     if (!newQ.title) return;
 
-    setQuestions([
-      {
-        id: `q_${Date.now()}`,
-        title: newQ.title,
-        category: newQ.category,
-        topic: newQ.topic,
-        difficulty: newQ.difficulty,
-        answer: newQ.answer || newQ.optA,
-        options: [newQ.optA, newQ.optB, newQ.optC, newQ.optD].filter(Boolean)
-      },
-      ...questions
-    ]);
+    const options = [newQ.optA, newQ.optB, newQ.optC, newQ.optD].filter(Boolean);
+    const payload = {
+      title: newQ.title,
+      content: newQ.statement || newQ.title,
+      category: newQ.category.toLowerCase(),
+      topic: newQ.topic,
+      difficulty: newQ.difficulty.toLowerCase(),
+      question_type: 'mcq',
+      options: options,
+      correct_answer: newQ.answer || options[0] || '',
+      explanation: newQ.explanation || '',
+      marks: 1,
+      tags: [newQ.topic]
+    };
 
-    setIsModalOpen(false);
-    setNewQ({
-      title: '',
-      category: 'Aptitude',
-      topic: 'Time & Work',
-      difficulty: 'Easy',
-      statement: '',
-      optA: '',
-      optB: '',
-      optC: '',
-      optD: '',
-      answer: '',
-      explanation: ''
-    });
+    try {
+      await axios.post('/api/v1/questions', payload);
+      await fetchQuestions();
+      setIsModalOpen(false);
+      setNewQ({
+        title: '',
+        category: 'Aptitude',
+        topic: 'Time & Work',
+        difficulty: 'Easy',
+        statement: '',
+        optA: '',
+        optB: '',
+        optC: '',
+        optD: '',
+        answer: '',
+        explanation: ''
+      });
+    } catch (err) {
+      console.error('Failed to create question:', err);
+      alert('Failed to save question to database. Please check your network or inputs.');
+    }
   };
 
-  const handleDelete = (id) => {
-    setQuestions(prev => prev.filter(q => q.id !== id));
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`/api/v1/questions/${id}`);
+      setQuestions(prev => prev.filter(q => q.id !== id));
+    } catch (err) {
+      console.error('Failed to delete question:', err);
+    }
   };
 
   const filtered = questions.filter(q => {
-    const matchesSearch = q.title.toLowerCase().includes(search.toLowerCase()) || q.topic.toLowerCase().includes(search.toLowerCase());
-    const matchesCat = catFilter === 'All' || q.category === catFilter;
+    const titleMatch = (q.title || '').toLowerCase().includes(search.toLowerCase());
+    const topicMatch = (q.topic || '').toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = titleMatch || topicMatch;
+    const catFormatted = (q.category || '').toLowerCase();
+    const filterFormatted = catFilter.toLowerCase();
+    const matchesCat = catFilter === 'All' || catFormatted === filterFormatted;
     return matchesSearch && matchesCat;
   });
 
@@ -115,58 +146,92 @@ export default function Questions() {
         </div>
 
         {/* Question Grid / List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {filtered.map((q) => (
-            <div key={q.id} className="card" style={{ padding: '18px 24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                  <div style={{
-                    width: '42px',
-                    height: '42px',
-                    borderRadius: '10px',
-                    backgroundColor: q.category === 'Aptitude' ? 'rgba(59, 130, 246, 0.12)' : 'rgba(139, 92, 246, 0.12)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: q.category === 'Aptitude' ? 'var(--primary)' : 'var(--secondary)'
-                  }}>
-                    <HelpCircle size={22} />
-                  </div>
-
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <h4 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                        {q.title}
-                      </h4>
-                      <span className={`badge badge-${q.difficulty.toLowerCase()}`}>
-                        {q.difficulty}
-                      </span>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                      <span>Category: <strong style={{ color: 'var(--text-secondary)' }}>{q.category}</strong></span>
-                      <span>•</span>
-                      <span>Topic: <strong style={{ color: 'var(--text-secondary)' }}>{q.topic}</strong></span>
-                      <span>•</span>
-                      <span>Correct Answer: <strong style={{ color: 'var(--success)' }}>{q.answer}</strong></span>
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button
-                    className="btn btn-secondary"
-                    style={{ height: '34px', padding: '0 10px', color: 'var(--error)' }}
-                    onClick={() => handleDelete(q.id)}
-                  >
-                    <Trash2 size={14} />
-                    <span>Delete</span>
-                  </button>
-                </div>
-              </div>
+        {loading ? (
+          <div className="card" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+            Loading questions from database...
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="card" style={{ padding: '48px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--primary)'
+            }}>
+              <HelpCircle size={28} />
             </div>
-          ))}
-        </div>
+            <h4 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-primary)' }}>
+              No Questions in Database
+            </h4>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', maxWidth: '420px', lineHeight: 1.5 }}>
+              There are currently no questions stored in the database. Click <strong>"Create New Question"</strong> above to publish your first real question.
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {filtered.map((q) => {
+              const catName = q.category ? q.category.charAt(0).toUpperCase() + q.category.slice(1) : 'General';
+              const diffName = q.difficulty ? q.difficulty.charAt(0).toUpperCase() + q.difficulty.slice(1) : 'Medium';
+              const isApt = catName.toLowerCase() === 'aptitude';
+              const correctAns = q.correct_answer || q.answer || (q.options && q.options[0]) || 'N/A';
+
+              return (
+                <div key={q.id} className="card" style={{ padding: '18px 24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      <div style={{
+                        width: '42px',
+                        height: '42px',
+                        borderRadius: '10px',
+                        backgroundColor: isApt ? 'rgba(59, 130, 246, 0.12)' : 'rgba(139, 92, 246, 0.12)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: isApt ? 'var(--primary)' : 'var(--secondary)'
+                      }}>
+                        <HelpCircle size={22} />
+                      </div>
+
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <h4 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                            {q.title}
+                          </h4>
+                          <span className={`badge badge-${diffName.toLowerCase()}`}>
+                            {diffName}
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                          <span>Category: <strong style={{ color: 'var(--text-secondary)' }}>{catName}</strong></span>
+                          <span>•</span>
+                          <span>Topic: <strong style={{ color: 'var(--text-secondary)' }}>{q.topic}</strong></span>
+                          <span>•</span>
+                          <span>Correct Answer: <strong style={{ color: 'var(--success)' }}>{correctAns}</strong></span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        className="btn btn-secondary"
+                        style={{ height: '34px', padding: '0 10px', color: 'var(--error)' }}
+                        onClick={() => handleDelete(q.id)}
+                      >
+                        <Trash2 size={14} />
+                        <span>Delete</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Add Question Modal */}

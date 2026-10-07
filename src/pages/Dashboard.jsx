@@ -18,47 +18,43 @@ import Header from '../components/Header';
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
-    totalStudents: 2480,
-    activeStudents: 1820,
-    publishedQuestions: 1250,
-    totalSubmissions: 48920,
-    accuracyRate: 84.6
+    totalStudents: 0,
+    activeStudents: 0,
+    publishedQuestions: 0,
+    totalSubmissions: 0,
+    accuracyRate: 0
   });
 
-  const [recentSubmissions, setRecentSubmissions] = useState([
-    { id: 1, student: 'Alex Mercer', studentId: 'CA-2026-9042', problem: 'Two Sum Target Indices', status: 'Accepted (100%)', time: '2 mins ago', ok: true },
-    { id: 2, student: 'Sophia Chen', studentId: 'CA-2026-8190', problem: 'Train Relative Velocity', status: 'Correct (10/10)', time: '8 mins ago', ok: true },
-    { id: 3, student: 'Marcus Vance', studentId: 'CA-2026-7412', problem: 'Merge Overlapping Intervals', status: 'Wrong Answer (Case 3)', time: '14 mins ago', ok: false },
-    { id: 4, student: 'Elena Rostova', studentId: 'CA-2026-9530', problem: 'Binary Search Worst Case', status: 'Correct (10/10)', time: '22 mins ago', ok: true },
-    { id: 5, student: 'David Kim', studentId: 'CA-2026-6119', problem: 'LRU Cache Design', status: 'Time Limit Exceeded', time: '35 mins ago', ok: false },
-  ]);
+  const [recentSubmissions, setRecentSubmissions] = useState([]);
 
   useEffect(() => {
     // Fetch live dashboard metrics from FastAPI
     axios.get('/api/v1/admin/dashboard').then(res => {
       if (res.data?.analytics) {
         const a = res.data.analytics;
-        setStats(prev => ({
-          ...prev,
-          totalStudents: a.total_students ?? prev.totalStudents,
-          activeStudents: a.active_students ?? prev.activeStudents,
-          publishedQuestions: a.published_questions ?? prev.publishedQuestions,
-          totalSubmissions: a.total_submissions ?? prev.totalSubmissions
-        }));
+        setStats({
+          totalStudents: a.total_students ?? 0,
+          activeStudents: a.active_students ?? 0,
+          publishedQuestions: a.published_questions ?? 0,
+          totalSubmissions: a.total_submissions ?? 0,
+          accuracyRate: a.accuracy_rate ?? 0
+        });
       }
-      if (res.data?.recent_submissions && res.data.recent_submissions.length > 0) {
+      if (res.data?.recent_submissions && Array.isArray(res.data.recent_submissions)) {
         setRecentSubmissions(res.data.recent_submissions.map((s, idx) => ({
-          id: idx + 1,
-          student: s.student_name,
-          studentId: `CA-2026-${8000 + idx}`,
-          problem: s.problem,
-          status: s.status,
-          time: s.time,
+          id: s.id || idx + 1,
+          student: s.student_name || 'Student',
+          studentId: s.student_id || `STU-${idx + 1}`,
+          problem: s.problem || 'Evaluation',
+          status: s.status || 'Submitted',
+          time: s.time || 'Recently',
           ok: s.status === 'Accepted' || s.status === 'Correct'
         })));
+      } else {
+        setRecentSubmissions([]);
       }
-    }).catch(() => {
-      // Keep resilient default seed
+    }).catch(err => {
+      console.error('Failed to load admin dashboard stats:', err);
     });
   }, []);
 
@@ -188,29 +184,37 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {recentSubmissions.map((sub) => (
-                    <tr key={sub.id}>
-                      <td>
-                        <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{sub.student}</div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{sub.studentId}</div>
+                  {recentSubmissions.length === 0 ? (
+                    <tr>
+                      <td colSpan="4" style={{ textAlign: 'center', padding: '36px 16px', color: 'var(--text-muted)' }}>
+                        No recent submissions found in the database.
                       </td>
-                      <td>{sub.problem}</td>
-                      <td>
-                        <span style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          color: sub.ok ? 'var(--success)' : 'var(--error)',
-                          fontWeight: 600,
-                          fontSize: '13px'
-                        }}>
-                          {sub.ok ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
-                          {sub.status}
-                        </span>
-                      </td>
-                      <td style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{sub.time}</td>
                     </tr>
-                  ))}
+                  ) : (
+                    recentSubmissions.map((sub) => (
+                      <tr key={sub.id}>
+                        <td>
+                          <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{sub.student}</div>
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{sub.studentId}</div>
+                        </td>
+                        <td>{sub.problem}</td>
+                        <td>
+                          <span style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            color: sub.ok ? 'var(--success)' : 'var(--error)',
+                            fontWeight: 600,
+                            fontSize: '13px'
+                          }}>
+                            {sub.ok ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
+                            {sub.status}
+                          </span>
+                        </td>
+                        <td style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{sub.time}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

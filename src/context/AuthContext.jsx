@@ -6,13 +6,7 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [admin, setAdmin] = useState(() => {
     const saved = localStorage.getItem('codearena_admin');
-    return saved ? JSON.parse(saved) : {
-      id: 'user_admin_01',
-      name: 'System Administrator',
-      email: 'admin@codearena.com',
-      role: 'admin',
-      token: 'admin_demo_jwt_token'
-    };
+    return saved ? JSON.parse(saved) : null;
   });
 
   const [loading, setLoading] = useState(false);
@@ -38,20 +32,6 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
       return true;
     } catch (err) {
-      // Fallback local auth for instant resilience
-      if (email.includes('admin') && (password === 'admin123' || password === 'adminpassword123' || password === 'admin')) {
-        const adminData = {
-          id: 'user_admin_01',
-          name: 'System Administrator',
-          email,
-          role: 'admin',
-          token: 'admin_demo_jwt_token'
-        };
-        setAdmin(adminData);
-        localStorage.setItem('codearena_admin', JSON.stringify(adminData));
-        setLoading(false);
-        return true;
-      }
       setError(err.response?.data?.detail || 'Invalid administrator credentials');
       setLoading(false);
       return false;
