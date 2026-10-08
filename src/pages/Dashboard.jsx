@@ -67,7 +67,7 @@ export default function Dashboard() {
 
       <div className="admin-content">
         {/* Banner */}
-        <div className="card" style={{
+        <div className="card dashboard-banner" style={{
           background: 'linear-gradient(135deg, rgba(30, 27, 75, 0.8), rgba(17, 24, 39, 0.95))',
           borderColor: 'rgba(139, 92, 246, 0.3)',
           marginBottom: '28px',
@@ -156,7 +156,7 @@ export default function Dashboard() {
         </div>
 
         {/* 2 Column Layout: Submissions Table & Quick Actions */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+        <div className="dashboard-columns-grid">
           {/* Recent Submissions */}
           <div className="card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { UIProvider } from './context/UIContext';
 import Sidebar from './components/Sidebar';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -19,19 +20,21 @@ function ProtectedLayout() {
   }
 
   return (
-    <div className="admin-layout">
-      <Sidebar />
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/students" element={<Students />} />
-        <Route path="/questions" element={<Questions />} />
-        <Route path="/coding" element={<CodingManagement />} />
-        <Route path="/assessments" element={<Assessments />} />
-        <Route path="/battles" element={<BattlesMonitor />} />
-        <Route path="/analytics" element={<Analytics />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </div>
+    <UIProvider>
+      <div className="admin-layout">
+        <Sidebar />
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/students" element={<Students />} />
+          <Route path="/questions" element={<Questions />} />
+          <Route path="/coding" element={<CodingManagement />} />
+          <Route path="/assessments" element={<Assessments />} />
+          <Route path="/battles" element={<BattlesMonitor />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
+    </UIProvider>
   );
 }
 

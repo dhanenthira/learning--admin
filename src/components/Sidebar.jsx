@@ -11,12 +11,15 @@ import {
   BarChart3,
   LogOut,
   Sparkles,
-  ExternalLink
+  ExternalLink,
+  X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useUI } from '../context/UIContext';
 
 export default function Sidebar() {
   const { logout } = useAuth();
+  const { sidebarOpen, closeSidebar } = useUI();
   const navigate = useNavigate();
 
   const navItems = [
@@ -30,43 +33,63 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="admin-sidebar">
-      {/* Brand Header */}
-      <div style={{
-        padding: '24px 20px',
-        borderBottom: '1px solid var(--divider)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px'
-      }}>
+    <>
+      {/* Mobile Backdrop */}
+      <div
+        className={`sidebar-backdrop ${sidebarOpen ? 'open' : ''}`}
+        onClick={closeSidebar}
+        aria-hidden="true"
+      />
+
+      <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
+        {/* Brand Header */}
         <div style={{
-          width: '40px',
-          height: '40px',
-          borderRadius: '10px',
-          background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+          padding: '24px 20px',
+          borderBottom: '1px solid var(--divider)',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
-          color: '#ffffff'
+          justifyContent: 'space-between',
+          gap: '12px'
         }}>
-          <Code2 size={24} />
-        </div>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ fontWeight: 800, fontSize: '17px', color: 'var(--text-primary)' }}>CODE</span>
-            <span style={{ fontWeight: 800, fontSize: '17px', color: 'var(--primary)' }}>ARENA</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '10px',
+              background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#ffffff'
+            }}>
+              <Code2 size={24} />
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ fontWeight: 800, fontSize: '17px', color: 'var(--text-primary)' }}>CODE</span>
+                <span style={{ fontWeight: 800, fontSize: '17px', color: 'var(--primary)' }}>ARENA</span>
+              </div>
+              <span style={{
+                fontSize: '10px',
+                fontWeight: 700,
+                letterSpacing: '1px',
+                color: 'var(--text-muted)',
+                textTransform: 'uppercase'
+              }}>
+                Admin Portal
+              </span>
+            </div>
           </div>
-          <span style={{
-            fontSize: '10px',
-            fontWeight: 700,
-            letterSpacing: '1px',
-            color: 'var(--text-muted)',
-            textTransform: 'uppercase'
-          }}>
-            Admin Portal
-          </span>
+
+          {/* Close button on mobile */}
+          <button
+            className="sidebar-close-btn"
+            onClick={closeSidebar}
+            aria-label="Close sidebar"
+          >
+            <X size={20} />
+          </button>
         </div>
-      </div>
 
       {/* Nav List */}
       <nav style={{ flex: 1, padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: '4px', overflowY: 'auto' }}>
@@ -146,6 +169,7 @@ export default function Sidebar() {
         </button>
       </div>
     </aside>
+    </>
   );
 }
 

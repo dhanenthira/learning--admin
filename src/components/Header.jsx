@@ -1,26 +1,39 @@
 import React from 'react';
-import { Bell, Search, ShieldCheck } from 'lucide-react';
+import { Bell, Search, ShieldCheck, Menu } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useUI } from '../context/UIContext';
 
 export default function Header({ title, subtitle }) {
   const { admin } = useAuth();
+  const { toggleSidebar } = useUI();
 
   return (
     <header className="admin-header">
-      <div>
-        <h1 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)' }}>
-          {title}
-        </h1>
-        {subtitle && (
-          <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px' }}>
-            {subtitle}
-          </p>
-        )}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+        {/* Mobile Hamburger Menu Button */}
+        <button
+          className="mobile-menu-btn"
+          onClick={toggleSidebar}
+          aria-label="Open navigation menu"
+        >
+          <Menu size={20} />
+        </button>
+
+        <div style={{ minWidth: 0 }}>
+          <h1 className="header-title" style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {title}
+          </h1>
+          {subtitle && (
+            <p className="header-subtitle" style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {subtitle}
+            </p>
+          )}
+        </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
         {/* System Status Pill */}
-        <div style={{
+        <div className="status-pill" style={{
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
